@@ -26,6 +26,21 @@ func (bot *Bot) getQuote() string {
 	return "Error!"
 }
 
+func (bot *Bot) retrieveQuote(quote string) string {
+	length := len(bot.quotes)
+	if length == 0 {
+		return "No quotes stored!"
+	}
+	fmt.Println("Quote requested is: ")
+	for k, v := range bot.quotes {
+		fmt.Println(k, v)
+	}
+	if val, ok := bot.quotes[quote]; ok {
+		return val
+	}
+	return ""
+}
+
 func (bot *Bot) writeQuoteDB() {
 	dst, err := os.Create("quotes" + bot.channel + ".ini")
 	defer dst.Close()
@@ -34,6 +49,7 @@ func (bot *Bot) writeQuoteDB() {
 		return
 	}
 	for split1, split2 := range bot.quotes {
+		fmt.Println(split1, split2, "******")
 		fmt.Fprintf(dst, split1+"|"+split2+"\n")
 	}
 }

@@ -4,7 +4,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/shkh/lastfm-go/lastfm"
+	// "github.com/shkh/lastfm-go/lastfm"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -34,7 +34,8 @@ func (bot *Bot) CmdInterpreter(username string, usermessage string) {
 	} else if strings.HasPrefix(message, "!quote") {
 		bot.Message(bot.getQuote())
 	} else if strings.HasPrefix(message, "!addquote ") {
-		stringpls := strings.Replace(message, "!addquote ", "", 1)
+		// take the upper case
+		stringpls := strings.Replace(usermessage, "!addquote ", "", 1)
 		if bot.isMod(username) {
 			bot.quotes[stringpls] = username
 			bot.writeQuoteDB()
@@ -67,13 +68,29 @@ func (bot *Bot) CmdInterpreter(username string, usermessage string) {
 			bot.Message(username + " you are not a mod!")
 		}
 	} else if message == "!song" {
-		api := lastfm.New("e6563970017df6d5966edfa836e12835", "dcc462ffd8a371fee5a5b49c248a2371")
-		temp, _ := api.User.GetRecentTracks(lastfm.P{"user": bot.lastfm})
-		var inserthere string
-		if temp.Tracks[0].Date.Date != "" {
-			inserthere = ". It was played on: " + temp.Tracks[0].Date.Date
+		bot.Message("Current functionality disabled, sorry!")
+
+		// api := lastfm.New("e6563970017df6d5966edfa836e12835", "dcc462ffd8a371fee5a5b49c248a2371")
+		// temp, _ := api.User.GetRecentTracks(lastfm.P{"user": bot.lastfm})
+		// var inserthere string
+		// if temp.Tracks[0].Date.Date != "" {
+		// 	inserthere = ". It was played on: " + temp.Tracks[0].Date.Date
+		// }
+		// bot.Message("Song: " + temp.Tracks[0].Artist.Name + " - " + temp.Tracks[0].Name + inserthere)
+	} else {
+		// check if it's a quote
+		maybeQuote := strings.Replace(usermessage, "!", "", 1)
+
+		fmt.Println(usermessage)
+		fmt.Println(maybeQuote)
+		if maybeQuote != "" {
+			quote := bot.retrieveQuote(maybeQuote)
+			fmt.Println("Quote retrieved is: ", quote)
+			if quote != "" {
+				bot.Message(quote)
+			}
 		}
-		bot.Message("Song: " + temp.Tracks[0].Artist.Name + " - " + temp.Tracks[0].Name + inserthere)
+
 	}
 }
 
