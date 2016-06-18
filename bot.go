@@ -2,10 +2,12 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"net/textproto"
 	"os"
 	"strings"
@@ -33,7 +35,7 @@ type Bot struct {
 
 func NewBot() *Bot {
 	return &Bot{
-		server:         "irc.twitch.tv",
+		server:         "irc.chat.twitch.tv",
 		port:           "6667",
 		nick:           "quanticbot", //Change to your Twitch username
 		channel:        "#vaultpls",  //Change to your channel
@@ -99,8 +101,8 @@ func (bot *Bot) ConsoleInput() {
 }
 
 func main() {
-	channel := flag.String("channel", "vaultpls", "Sets the channel for the bot to go into.")
-	nick := flag.String("nickname", "quanticbot", "The username of the bot.")
+	channel := flag.String("channel", "jayg_52", "Sets the channel for the bot to go into.")
+	nick := flag.String("nickname", "makozdoto", "The username of the bot.")
 	autoMSG1 := flag.String("timedmsg", "Welcome!  If you enjoy my stream, please follow!", "Set the automatic timed message.")
 	autoMSG1Count := flag.Int("timedmsgcount", 10, "Set how often the timed message gets displayed.")
 	autoMSG2 := flag.String("linemsg", "Follow me if you really enjoy the stream!  Thank you all!", "Set the automatic line message")
@@ -117,6 +119,7 @@ func main() {
 
 	pass1, err := ioutil.ReadFile("twitch_pass.txt")
 	pass := strings.Replace(string(pass1), "\n", "", 0)
+	fmt.Println(pass)
 	if err != nil {
 		fmt.Println("Error reading from twitch_pass.txt.  Maybe it isn't created?")
 		os.Exit(1)
@@ -143,16 +146,21 @@ func main() {
 	fmt.Printf("Inserted information to server...\n")
 	fmt.Printf("If you don't see the stream chat it probably means the Twitch oAuth password is wrong\n")
 	fmt.Printf("Channel: " + ircbot.channel + "\n")
+
 	defer ircbot.conn.Close()
 	go ircbot.AutoMessage()
 	reader := bufio.NewReader(ircbot.conn)
 	tp := textproto.NewReader(reader)
 	go ircbot.ConsoleInput()
+
 	for {
 		line, err := tp.ReadLine()
 		if err != nil {
+			fmt.Println(err)
 			break // break loop on errors
 		}
+		fmt.Println(line)
+		// fmt.Println(line)
 		if strings.Contains(line, "PING") {
 			pongdata := strings.Split(line, "PING ")
 			fmt.Fprintf(ircbot.conn, "PONG %s\r\n", pongdata[1])
@@ -164,6 +172,7 @@ func main() {
 			userdata := strings.Split(line, ".tmi.twitch.tv PRIVMSG "+ircbot.channel)
 			username := strings.Split(userdata[0], "@")
 			usermessage := strings.Replace(userdata[1], " :", "", 1)
+
 			fmt.Printf(username[1] + ": " + usermessage + "\n")
 			if ircbot.userLastMsg[username[1]]+int64(ircbot.userMaxLastMsg) >= time.Now().Unix() {
 				ircbot.timeout(username[1], "spam")
@@ -189,5 +198,15 @@ func main() {
 			fmt.Printf(usermod[1] + " isn't a moderator anymore!\n")
 		}
 	}
+	fmt.Println("were exiting somehow?")
+}
 
+func getJson(url string, target interface{}) error {
+	r, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+
+	return json.NewDecoder(r.Body).Decode(target)
 }
