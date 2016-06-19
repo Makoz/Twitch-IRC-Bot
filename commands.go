@@ -36,8 +36,9 @@ func (bot *Bot) CmdInterpreter(username string, usermessage string) {
 	} else if strings.HasPrefix(message, "!addquote ") {
 		// take the upper case
 		stringpls := strings.Replace(usermessage, "!addquote ", "", 1)
+		quotes := strings.Split(stringpls, " ")
 		if bot.isMod(username) {
-			bot.quotes[stringpls] = username
+			bot.quotes[quotes[0]] = quotes[1]
 			bot.writeQuoteDB()
 			bot.Message("Quote added!")
 		} else {
@@ -148,6 +149,7 @@ func (bot *Bot) getUptime(username string) string {
 	// fmt.Println(f, "EKLWJFKLE")
 	m := f.(map[string]interface{})
 
+	// Need to better check null I think
 	if stream, ok := m["stream"]; ok {
 		streamMap := stream.(map[string]interface{})
 		created_at := reflect.ValueOf(streamMap["created_at"]).String()
