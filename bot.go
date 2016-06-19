@@ -31,6 +31,8 @@ type Bot struct {
 	maxMsgTime     int64
 	userMaxLastMsg int
 	lastfm         string
+	timestamps     []time.Time
+	limit          int
 }
 
 func NewBot() *Bot {
@@ -51,6 +53,8 @@ func NewBot() *Bot {
 		userLastMsg:    make(map[string]int64),
 		userMaxLastMsg: 2,
 		lastfm:         "NExTliFE_",
+		limit:          20, // TODO: add option if mod set to 100
+		timestamps:     make([]time.Time, 0),
 	}
 }
 
@@ -66,16 +70,33 @@ func (bot *Bot) Connect() {
 	fmt.Printf("Connected to IRC server %s\n", bot.server)
 }
 
+// Need to add a lock here!
 func (bot *Bot) Message(message string) {
 	if message == "" {
 		return
 	}
-	if bot.lastmsg+bot.maxMsgTime <= time.Now().Unix() {
+	if bot.limit <= 5 {
+		// clean up timestamps
+		idx := 0
+		for k, v := range bot.timestamps {
+			expire := v.Add(time.Second * 30)
+			if expire.Before(time.Now()) {
+				idx++
+				fmt.Println("INDEX ", k, " HAS EXPIRED WITH VAL: ", v)
+				bot.limit++
+			}
+		}
+		fmt.Println(bot.timestamps)
+		bot.timestamps = bot.timestamps[idx:]
+	}
+	if bot.limit > 1 {
 		fmt.Printf("Bot: " + message + "\n")
 		fmt.Fprintf(bot.conn, "PRIVMSG "+bot.channel+" :"+message+"\r\n")
-		bot.lastmsg = time.Now().Unix()
+		bot.timestamps = append(bot.timestamps, time.Now())
+		bot.limit--
 	} else {
 		fmt.Println("Attempted to spam message")
+
 	}
 }
 
