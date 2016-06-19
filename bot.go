@@ -11,6 +11,7 @@ import (
 	"net/textproto"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -75,6 +76,7 @@ func (bot *Bot) Message(message string) {
 	if message == "" {
 		return
 	}
+	mtx.Lock()
 	if bot.limit <= 5 {
 		// clean up timestamps
 		idx := 0
@@ -98,6 +100,7 @@ func (bot *Bot) Message(message string) {
 		fmt.Println("Attempted to spam message")
 
 	}
+	mtx.Unlock()
 }
 
 func (bot *Bot) AutoMessage() {
@@ -120,6 +123,8 @@ func (bot *Bot) ConsoleInput() {
 		}
 	}
 }
+
+var mtx sync.Mutex
 
 func main() {
 	channel := flag.String("channel", "jayg_52", "Sets the channel for the bot to go into.")
