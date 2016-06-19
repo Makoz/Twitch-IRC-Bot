@@ -27,9 +27,7 @@ func (bot *Bot) CmdInterpreter(username string, usermessage string) {
 	if strings.HasPrefix(message, "!uptime") {
 		uptime := bot.getUptime(bot.channel)
 		bot.Message(uptime)
-	}
-
-	if strings.HasPrefix(message, "!help") {
+	} else if strings.HasPrefix(message, "!help") {
 		bot.Message("Sucks for you I have no idea what I'm doing")
 	} else if strings.HasPrefix(message, "!quote") {
 		bot.Message(bot.getQuote())
